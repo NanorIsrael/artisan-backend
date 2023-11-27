@@ -13,6 +13,6 @@ class UserSerializer(UserCreateSerializer):
 		user.save()
 		return user
 		
-	class Meta:
+	class Meta(UserCreateSerializer.Meta):
 		model = User
 		fields = ['id', 'email', 'username', 'password', 'membership']

@@ -14,3 +14,4 @@
 - Run makemigrations
 - Run migrations
 
+HOST=localhost USER=airflow PASSWORD=airflow python3 manage.py runserver
