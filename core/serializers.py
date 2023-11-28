@@ -20,3 +20,9 @@ class ArtisanPortfolioSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ArtisanPortfolio
 		fields = ['id', 'job_title', 'summary', 'category']
+
+
+# class ArtisanSearchSerializer(serializers.ModelSerializer):
+# 	class Meta:
+# 		model = ArtisanPortfolio
+# 		fields = ['id', 'job_title', 'summary', 'category']

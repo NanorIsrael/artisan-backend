@@ -1,17 +1,17 @@
+# from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
 from .models import Customer, ArtisanCategory, ArtisanPortfolio
-from .serializers import CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer
-
-# Create your views here.
-# @api_view(['GET'])
-# def Customer(request):
-# 	return Response('ok')
+from .serializers import (
+	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, 
+	
+)
 
 class CustomerViewSet(
 	CreateModelMixin, RetrieveModelMixin, 
@@ -33,15 +33,16 @@ class ArtisanCategoryViewSet(viewsets.ModelViewSet):
 
 
 class ArtisanPortfolioViewSet(
-	CreateModelMixin, RetrieveModelMixin, 
-	UpdateModelMixin, GenericViewSet
+	viewsets.ModelViewSet
 ):
 	queryset = ArtisanPortfolio.objects.all()
 	serializer_class = ArtisanPortfolioSerializer
-	permission_classes = [IsAuthenticated]
+	filter_backends = [SearchFilter]
+	search_fields = ['job_title',  'category', 'summary']
 
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
+		permission_classes = [IsAuthenticated]
 		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=request.user.id)
 		if request.method == 'GET': 
 			serialized = ArtisanPortfolioSerializer(artisan)
@@ -51,3 +52,10 @@ class ArtisanPortfolioViewSet(
 			serialized.is_valid(raise_exception=True)
 			serialized.save()
 			return Response(serialized.data)
+
+
+# class SearchViewSet(RetrieveModelMixin, GenericViewSet):
+# 	queryset = ArtisanCategory.objects.all()
+# 	serializer_class = ArtisanSearchSerializer
+# 	filter_backends = [SearchFilter]
+# 	search_fields = ['job_title', 'category']

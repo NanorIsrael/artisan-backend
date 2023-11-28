@@ -7,6 +7,7 @@ router = DefaultRouter()
 router.register('profile', views.CustomerViewSet)
 router.register('professional', views.ArtisanPortfolioViewSet)
 router.register('category', views.ArtisanCategoryViewSet)
+# router.register('query', views.SearchViewSet)
 
 
 urlpatterns =  router.urls
