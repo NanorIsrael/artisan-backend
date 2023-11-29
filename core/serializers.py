@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Customer, ArtisanCategory, ArtisanPortfolio
+from .models import Customer, ArtisanCategory, ArtisanPortfolio, Address
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -22,7 +22,7 @@ class ArtisanPortfolioSerializer(serializers.ModelSerializer):
 		fields = ['id', 'job_title', 'summary', 'category']
 
 
-# class ArtisanSearchSerializer(serializers.ModelSerializer):
-# 	class Meta:
-# 		model = ArtisanPortfolio
-# 		fields = ['id', 'job_title', 'summary', 'category']
+class AddressSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Address
+		fields = ['id', 'house_number', 'street', 'city', 'state']

@@ -1,4 +1,3 @@
-# from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -7,10 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from rest_framework import viewsets
-from .models import Customer, ArtisanCategory, ArtisanPortfolio
+from .models import Customer, ArtisanCategory, ArtisanPortfolio, Address
 from .serializers import (
-	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, 
-	
+	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, AddressSerializer
 )
 
 class CustomerViewSet(
@@ -27,6 +25,30 @@ class CustomerViewSet(
 		serialized = CustomerSerializer(customer)
 		return Response(serialized.data)
 
+
+class AddressViewSet(
+	CreateModelMixin, RetrieveModelMixin, 
+	UpdateModelMixin, GenericViewSet
+):
+	queryset = Address.objects.all()
+	serializer_class = AddressSerializer
+	filter_backends = [SearchFilter]
+	search_fields = ['street', 'city', 'state']
+
+	@action(detail=False, methods=['GET', 'PUT', 'POST'])
+	def profile(self, request):
+		permission_classes = [IsAuthenticated]
+		(address, created) = Address.objects.get_or_create(user_id=request.user.id)
+		if request.method == 'GET': 
+			serialized = AddressSerializer(address)
+			return Response(serialized.data)
+		else:
+			serialized = AddressSerializer(address, data=request.data)
+			serialized.is_valid(raise_exception=True)
+			serialized.save()
+			return Response(serialized.data)
+
+
 class ArtisanCategoryViewSet(viewsets.ModelViewSet):
 	queryset = ArtisanCategory.objects.all()
 	serializer_class = ArtisanCategorySerializer
@@ -38,7 +60,7 @@ class ArtisanPortfolioViewSet(
 	queryset = ArtisanPortfolio.objects.all()
 	serializer_class = ArtisanPortfolioSerializer
 	filter_backends = [SearchFilter]
-	search_fields = ['job_title',  'category', 'summary']
+	search_fields = ['job_title', 'category', 'summary', 'user__address__city', 'user__address__state', 'user__address__street']
 
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
@@ -53,9 +75,19 @@ class ArtisanPortfolioViewSet(
 			serialized.save()
 			return Response(serialized.data)
 
+	@action(detail=False, methods=['GET'])
+	def search(self, request):
+		search_query = request.query_params.get('search', '')
 
-# class SearchViewSet(RetrieveModelMixin, GenericViewSet):
-# 	queryset = ArtisanCategory.objects.all()
-# 	serializer_class = ArtisanSearchSerializer
-# 	filter_backends = [SearchFilter]
-# 	search_fields = ['job_title', 'category']
+		# Filter artisans based on job_title, category, summary, city, and state
+		queryset = self.queryset.filter(
+			job_title__icontains=search_query,
+			category__icontains=search_query,
+			summary__icontains=search_query,
+			 user__address__city__icontains=search_query,
+            user__address__state__icontains=search_query
+		)
+
+		serializer = self.serializer_class(queryset, many=True)
+		return Response(serializer.data)
+

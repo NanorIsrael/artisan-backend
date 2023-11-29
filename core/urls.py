@@ -5,9 +5,10 @@ from . import views
 
 router = DefaultRouter()
 router.register('profile', views.CustomerViewSet)
-router.register('professional', views.ArtisanPortfolioViewSet)
+router.register('artisan', views.ArtisanPortfolioViewSet)
 router.register('category', views.ArtisanCategoryViewSet)
-# router.register('query', views.SearchViewSet)
+router.register('address', views.AddressViewSet)
+# router.register('search', views.CombinedSearchViewSet)
 
 
 urlpatterns =  router.urls

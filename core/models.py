@@ -28,6 +28,14 @@ class Customer(models.Model):
 		ordering = ['user__first_name', 'user__last_name']
 
 
+class Address(models.Model):
+	house_number = models.CharField(max_length=255)
+	street = models.CharField(max_length=255)
+	city = models.CharField(max_length=255)
+	state = models.CharField(max_length=255)
+	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+
 class ArtisanCategory(models.Model):
 	BUILDING_AND_CONSTRUCTION = 'BUILDING_AND_CONSTRUCTION'
 	CARPENTRY = 'CARPENTRY'
