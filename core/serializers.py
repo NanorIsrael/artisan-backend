@@ -9,6 +9,10 @@ class CustomerSerializer(serializers.ModelSerializer):
 		model = Customer
 		fields = ['id', 'user_id', 'phone', 'first_name', 'last_name', 'birth_date', 'membership']
 
+class AddressSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Address
+		fields = ['id', 'house_number', 'street', 'city', 'state']
 
 class ArtisanCategorySerializer(serializers.ModelSerializer):
 	class Meta:
@@ -17,12 +21,16 @@ class ArtisanCategorySerializer(serializers.ModelSerializer):
 
 
 class ArtisanPortfolioSerializer(serializers.ModelSerializer):
+	address = serializers.SerializerMethodField()
+	# AddressSerializer(many=True, read_only=True)
 	class Meta:
 		model = ArtisanPortfolio
-		fields = ['id', 'job_title', 'summary', 'category']
+		fields = ['id', 'job_title', 'summary', 'category', 'address']
+		depth = 1
 
-
-class AddressSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = Address
-		fields = ['id', 'house_number', 'street', 'city', 'state']
+	def get_address(self, obj):
+		# Assuming 'address' is the related name in the ArtisanPortfolio model
+		# users = obj.user
+		# print(users)
+		addresses = Address.objects.all()
+		return AddressSerializer(addresses).data
