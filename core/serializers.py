@@ -19,18 +19,13 @@ class ArtisanCategorySerializer(serializers.ModelSerializer):
 		model = ArtisanCategory
 		fields = ['id', 'category']
 
-
 class ArtisanPortfolioSerializer(serializers.ModelSerializer):
-	address = serializers.SerializerMethodField()
-	# AddressSerializer(many=True, read_only=True)
+	addresses = serializers.SerializerMethodField()
 	class Meta:
 		model = ArtisanPortfolio
-		fields = ['id', 'job_title', 'summary', 'category', 'address']
-		depth = 1
+		fields = ['id', 'job_title', 'summary', 'category', 'addresses']
 
-	def get_address(self, obj):
-		# Assuming 'address' is the related name in the ArtisanPortfolio model
-		# users = obj.user
-		# print(users)
-		addresses = Address.objects.all()
-		return AddressSerializer(addresses).data
+	def get_addresses(self, obj):
+	# 	# Assuming 'address' is the related name in the ArtisanPortfolio model
+		addresses = obj.user.address_set.all()
+		return AddressSerializer(addresses, many=True).data
