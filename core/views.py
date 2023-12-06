@@ -7,6 +7,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from rest_framework import viewsets
 from .models import Customer, ArtisanCategory, ArtisanPortfolio, Address
+from .pagination import DefaultPagination
 from .serializers import (
 	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, AddressSerializer
 )
@@ -48,6 +49,28 @@ class AddressViewSet(
 			serialized.save()
 			return Response(serialized.data)
 
+	@action(detail=False, methods=['GET'])
+	def streets(self, request):
+			streets = Address.objects.all()
+			serialized = AddressSerializer(streets, many=True)
+			street_data = [item['street'] for item in serialized.data]
+			return Response(street_data)
+
+	@action(detail=False, methods=['GET'])
+	def cities(self, request):
+			cities = Address.objects.all()
+			serialized = AddressSerializer(cities, many=True)
+			city_data = [item['city'] for item in serialized.data]
+			return Response(city_data)
+
+	@action(detail=False, methods=['GET'])
+	def states(self, request):
+			return Response([
+				'Greater Accra', 'Volta', 'Oti', 'Eastern',
+				'Ashanti', 'Brong Ahafo', 'Bono East', 'Western',
+				'Upper west', 'Ahafo', 'Western North', 'Upper East',
+				'Central', 'North East', 'Northern', 'Savannah',
+				])
 
 class ArtisanCategoryViewSet(viewsets.ModelViewSet):
 	queryset = ArtisanCategory.objects.all()
@@ -60,6 +83,7 @@ class ArtisanPortfolioViewSet(
 	queryset = ArtisanPortfolio.objects.all()
 	serializer_class = ArtisanPortfolioSerializer
 	filter_backends = [SearchFilter]
+	pagination_class = DefaultPagination
 	search_fields = ['job_title', 'category', 'summary', 'user__address__city', 'user__address__state', 'user__address__street']
 
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
