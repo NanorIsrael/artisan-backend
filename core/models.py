@@ -81,3 +81,23 @@ class ArtisanPortfolio(models.Model):
 	summary = models.TextField()
 	category = models.CharField(max_length=255, choices=MEMBERSHIP_CHOICES, default=BUILDING_AND_CONSTRUCTION)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+	class Meta:
+		ordering = ['id']  # Replace 'id' with the field you want to use for ordering
+
+class Countries(models.Model):
+	name = models.CharField(max_length=255)
+	code = models.CharField(max_length=255)
+	flag = models.CharField(max_length=255)
+
+class States(models.Model):
+	name = models.CharField(max_length=255)
+	country = models.ForeignKey(Countries, on_delete=models.CASCADE)
+
+class Cities(models.Model):
+	name = models.CharField(max_length=255)
+	state = models.ForeignKey(States, on_delete=models.CASCADE)
+
+class Street(models.Model):
+	name = models.CharField(max_length=255)
+	city = models.ForeignKey(Cities, on_delete=models.CASCADE)
+

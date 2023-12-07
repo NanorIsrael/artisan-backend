@@ -1,7 +1,9 @@
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
+# from rest_framework.pagination import Paginator
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
@@ -86,9 +88,13 @@ class ArtisanPortfolioViewSet(
 	pagination_class = DefaultPagination
 	search_fields = ['job_title', 'category', 'summary', 'user__address__city', 'user__address__state', 'user__address__street']
 
+	def get_queryset(self):
+		return ArtisanPortfolio.objects.all()
+
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
 		permission_classes = [IsAuthenticated]
+
 		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=request.user.id)
 		if request.method == 'GET': 
 			serialized = ArtisanPortfolioSerializer(artisan)
@@ -101,17 +107,23 @@ class ArtisanPortfolioViewSet(
 
 	@action(detail=False, methods=['GET'])
 	def search(self, request):
-		search_query = request.query_params.get('search', '')
+		queryset = self.queryset
 
-		# Filter artisans based on job_title, category, summary, city, and state
-		queryset = self.queryset.filter(
-			job_title__icontains=search_query,
-			category__icontains=search_query,
-			summary__icontains=search_query,
-			 user__address__city__icontains=search_query,
-            user__address__state__icontains=search_query
-		)
+		# Define a mapping of query parameters to model fields
+		search_fields_mapping = {
+			'title': 'job_title__icontains',
+			'state': 'user__address__state__icontains',
+			# Add more search criteria as needed
+		}
 
-		serializer = self.serializer_class(queryset, many=True)
-		return Response(serializer.data)
+		# Apply filters based on query parameters
+		for query, model_field in search_fields_mapping.items():
+			search_query = request.query_params.get(query, '')
+			if search_query:
+				queryset = queryset.filter(**{model_field: search_query})
 
+		# Paginate the queryset
+		paginated_queryset = self.paginate_queryset(queryset)
+
+		serializer = self.serializer_class(paginated_queryset, many=True)
+		return self.get_paginated_response(serializer.data)
