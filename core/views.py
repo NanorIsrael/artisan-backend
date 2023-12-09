@@ -1,4 +1,4 @@
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.conf import settings
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -11,7 +11,8 @@ from rest_framework import viewsets
 from .models import Customer, ArtisanCategory, ArtisanPortfolio, Address
 from .pagination import DefaultPagination
 from .serializers import (
-	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, AddressSerializer
+	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, 
+	AddressSerializer, ArtisanUserIdSerializer
 )
 
 class CustomerViewSet(
@@ -20,15 +21,24 @@ class CustomerViewSet(
 ):
 	queryset = Customer.objects.all()
 	serializer_class = CustomerSerializer
-	permission_classes = [IsAuthenticated]
+	# permission_classes = [IsAuthenticated]
 
 	@action(detail=False, methods=['GET', 'PUT'])
 	def me(self, request):
-		(customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+		(customer, created) = Customer.objects.get_or_create(user_id=1)
+	
 		serialized = CustomerSerializer(customer)
+		if request.method == 'PUT':
+			customer.user.first_name = request.data['first_name']
+			customer.user.last_name = request.data['last_name']
+			customer.user.save()
+			serialized = CustomerSerializer(customer, data=request.data)
+			serialized.is_valid(raise_exception=True)
+			serialized.save()
+	
 		return Response(serialized.data)
 
-
+# request.user.id
 class AddressViewSet(
 	CreateModelMixin, RetrieveModelMixin, 
 	UpdateModelMixin, GenericViewSet
@@ -113,6 +123,8 @@ class ArtisanPortfolioViewSet(
 		search_fields_mapping = {
 			'title': 'job_title__icontains',
 			'state': 'user__address__state__icontains',
+			'city': 'user__address__city__icontains',
+			'street': 'user__address__street__icontains',
 			# Add more search criteria as needed
 		}
 
@@ -127,3 +139,24 @@ class ArtisanPortfolioViewSet(
 
 		serializer = self.serializer_class(paginated_queryset, many=True)
 		return self.get_paginated_response(serializer.data)
+
+
+	@action(detail=True, methods=['GET'])
+	def info(self, request, pk=None):
+		try:
+			artisan = ArtisanPortfolio.objects.get(pk=pk)
+			serialized_artisan = ArtisanPortfolioSerializer(artisan)
+
+			customer_info = Customer.objects.get(user_id=artisan.user_id)
+			serialized_customer = CustomerSerializer(customer_info)
+
+			return Response(
+				{
+					"email": artisan.user.email, 
+					**serialized_artisan.data,
+					**serialized_customer.data
+				}
+			)
+		except (ArtisanPortfolio.DoesNotExist, Customer.DoesNotExist):
+			return Response({'error': 'Artisan not found'}, status='404')
+
