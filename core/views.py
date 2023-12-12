@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models.aggregates import Avg
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -8,11 +9,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from rest_framework import viewsets
-from .models import Customer, ArtisanCategory, ArtisanPortfolio, Address
+from .models import (
+	Customer, ArtisanCategory, ArtisanPortfolio, 
+	Address, Customer_profile_photo, Ratings
+)
 from .pagination import DefaultPagination
 from .serializers import (
 	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, 
-	AddressSerializer, ArtisanUserIdSerializer
+	AddressSerializer, ArtisanUserIdSerializer, Profile_photo_serializer,
+	ArtisanRatingSerializer
 )
 
 class CustomerViewSet(
@@ -21,24 +26,26 @@ class CustomerViewSet(
 ):
 	queryset = Customer.objects.all()
 	serializer_class = CustomerSerializer
-	# permission_classes = [IsAuthenticated]
+	permission_classes = [IsAuthenticated]
 
 	@action(detail=False, methods=['GET', 'PUT'])
 	def me(self, request):
-		(customer, created) = Customer.objects.get_or_create(user_id=1)
-	
+
+		(customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
 		serialized = CustomerSerializer(customer)
 		if request.method == 'PUT':
 			customer.user.first_name = request.data['first_name']
 			customer.user.last_name = request.data['last_name']
+			customer.user.username = request.data['username']
+
 			customer.user.save()
+
 			serialized = CustomerSerializer(customer, data=request.data)
 			serialized.is_valid(raise_exception=True)
 			serialized.save()
 	
 		return Response(serialized.data)
 
-# request.user.id
 class AddressViewSet(
 	CreateModelMixin, RetrieveModelMixin, 
 	UpdateModelMixin, GenericViewSet
@@ -104,8 +111,7 @@ class ArtisanPortfolioViewSet(
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
 		permission_classes = [IsAuthenticated]
-
-		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=request.user.id)
+GII		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=1)
 		if request.method == 'GET': 
 			serialized = ArtisanPortfolioSerializer(artisan)
 			return Response(serialized.data)
@@ -160,3 +166,73 @@ class ArtisanPortfolioViewSet(
 		except (ArtisanPortfolio.DoesNotExist, Customer.DoesNotExist):
 			return Response({'error': 'Artisan not found'}, status='404')
 
+
+class ProfilePhotoViewSet(viewsets.ModelViewSet):
+	serializer_class = Profile_photo_serializer
+	queryset = Customer_profile_photo.objects.all()
+	
+	@action(detail=False, methods=['GET', 'POST'])
+	def photo(self, request):
+		try:
+			customer = Customer.objects.get(user_id=request.user.id)
+			(customer, created) = Customer_profile_photo.objects.get_or_create(customer_id=customer.id)
+			if request.method == 'GET':
+				serialized = Profile_photo_serializer(customer)
+				return Response(serialized.data)
+			else: 
+				serialized = Profile_photo_serializer(customer, data=request.data)
+				serialized.is_valid(raise_exception=True)
+				serialized.save()
+				return Response({
+					'message': 'Photo uploaded successfully',
+					'photo': serialized.data['photo']
+				}, status='201')
+			# Return a response
+		except ( Customer.DoesNotExist, Customer_profile_photo.DoesNotExist):
+			return Response({'message': 'failed to upload image'})
+
+class ArtisanRatingViewset(viewsets.ModelViewSet):
+	queryset = Ratings.objects.all()
+	serializer_class = ArtisanRatingSerializer
+
+	def list(self, request, *args, **kwargs):
+		artisans = ArtisanPortfolio.objects.all()
+		artisan_ratings = []
+
+		for artisan in artisans:
+			avg_rating = Ratings.objects.filter(artisan_id=artisan.id).aggregate(average_rating=Avg('rating'))
+			avg_rating_value = avg_rating['average_rating'] or 0
+
+			artisan_ratings.append({
+				'artisan_id': artisan.id,
+				'artisan_name': artisan.user.get_full_name(),
+				'average_rating': avg_rating_value,
+			})
+
+		return Response(artisan_ratings)
+		
+	@action(detail=False, methods=['GET', 'POST'])
+	def user(self, request):
+		try:
+			artisan = ArtisanPortfolio.objects.get(user_id=request.user.id)
+			user_ratings = Ratings.objects.filter(artisan_id=artisan.id).aggregate(average_ratings=Avg('rating'))
+			return Response(user_ratings)
+		except (ArtisanPortfolio.DoesNotExist, Ratings.DoesNotExist):
+			return Response({'average_ratings': 0})
+
+	@action(detail=False, methods=['POST'])
+	def add_rating(self, request):
+		customer = Customer.objects.get(user_id=request.user.id)
+		artisan_id = request.data['artisan_id']
+
+		artisan_rating = Ratings.objects.get_or_create(artisan_id=artisan_id, customer_id=customer.id)
+		data = {
+			"customer_id": customer.id,
+			**request.data
+		}
+
+		serialized = ArtisanRatingSerializer(artisan_rating, data)
+		serialized.is_valid(raise_exception=True)
+		serialized.save()
+		return Response('serialized.data')
+		

@@ -1,14 +1,23 @@
 from django.contrib import admin
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 # Create your models here.
 class Customer(models.Model):
-
-	phone = models.CharField(max_length=255)
-	# business_line = models.CharField(max_length=255)
+	MALE = 'M'
+	FEMALE = 'F'
+	OTHER = 'OTHER'
+	SEX_CHOICES = [
+		(MALE, 'M'),
+		(FEMALE, 'F'),
+		(OTHER, 'OTHER'),
+	]
 	birth_date = models.DateField(null=True, blank=True)
+	phone = models.CharField(max_length=255)
+	# sex = models.CharField(max_length=255, choices=SEX_CHOICES default=OTHER)
 
 	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
@@ -25,8 +34,26 @@ class Customer(models.Model):
 	def last_name(self):
 		return self.user.last_name
 
+	def email(self):
+		return self.user.email
+
+	def username(self):
+		return self.user.username
+
+
 	class Meta:
 		ordering = ['user__first_name', 'user__last_name']
+
+
+class Customer_profile_photo(models.Model):
+	customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='photos');
+	photo = models.ImageField()
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	def save(self, *args, **kwargs):
+		self.updated_at = timezone.now()
+		super().save(*args, **kwargs)
 
 
 class Address(models.Model):
@@ -81,6 +108,8 @@ class ArtisanPortfolio(models.Model):
 	job_title = models.CharField(max_length=255)
 	summary = models.TextField()
 	category = models.CharField(max_length=255, choices=MEMBERSHIP_CHOICES, default=BUILDING_AND_CONSTRUCTION)
+	# business_line = models.CharField(max_length=255)
+
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 	class Meta:
 		ordering = ['id']  # Replace 'id' with the field you want to use for ordering
@@ -98,10 +127,18 @@ class Cities(models.Model):
 	name = models.CharField(max_length=255)
 	state = models.ForeignKey(States, on_delete=models.CASCADE)
 
-class Street(models.Model):
+class Streets(models.Model):
 	name = models.CharField(max_length=255)
 	city = models.ForeignKey(Cities, on_delete=models.CASCADE)
 
 class ArtisanAddress(models.Model):
 	artisan_id = models.ForeignKey(ArtisanPortfolio, on_delete=models.CASCADE)
 	address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='address')
+
+
+class Ratings(models.Model):
+	customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE);
+	artisan_id = models.ForeignKey(ArtisanPortfolio, on_delete=models.CASCADE, related_name='ratings');
+	rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)

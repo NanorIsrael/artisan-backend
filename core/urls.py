@@ -8,7 +8,8 @@ router.register('profile', views.CustomerViewSet)
 router.register('artisan', views.ArtisanPortfolioViewSet)
 router.register('category', views.ArtisanCategoryViewSet)
 router.register('address', views.AddressViewSet)
-# router.register('search', views.CombinedSearchViewSet)
+router.register('customer', views.ProfilePhotoViewSet)
+router.register('rating', views.ArtisanRatingViewset)
 
 
 urlpatterns =  router.urls

@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+
 from pathlib import Path
-from os import environ
+from os import environ, path
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,13 +30,13 @@ DEBUG = True
 # Application definition
 
 INSTALLED_APPS = [
-    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'djoser',
     'common',
@@ -57,7 +58,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'artisanbay.urls'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # or the origin of your React app
+    "http://localhost:5173",
 ]
 
 # Allow cookies to be included in cross-origin requests
@@ -156,7 +157,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+MDEDIA_URL = '/media/'
+MEDIA_ROOT = environ.get('MEDIA_ROOT')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
