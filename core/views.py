@@ -111,7 +111,7 @@ class ArtisanPortfolioViewSet(
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
 		permission_classes = [IsAuthenticated]
-GII		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=1)
+		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=request.user.id)
 		if request.method == 'GET': 
 			serialized = ArtisanPortfolioSerializer(artisan)
 			return Response(serialized.data)
