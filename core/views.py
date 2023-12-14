@@ -232,8 +232,9 @@ class ArtisanRatingViewset(viewsets.ModelViewSet):
 	def add_rating(self, request):
 		customer = Customer.objects.get(user_id=request.user.id)
 		artisan_id = request.data['artisan_id']
+		artisan = ArtisanPortfolio.objects.get(id=artisan_id)
+		(artisan_rating, created) = Ratings.objects.get_or_create(artisan=artisan, customer=customer, rating=request.data['rating'])
 
-		(artisan_rating, created) = Ratings.objects.get_or_create(artisan_id=artisan_id, customer_id=customer.id)
 		data = {
 			"customer_id": customer.id,
 			**request.data
@@ -258,7 +259,7 @@ class ArtisanReviewViewset(viewsets.ModelViewSet):
 		customer = Customer.objects.get(user_id=request.user.id)
 		artisan_id = request.data['artisan_id']
 		artisan = ArtisanPortfolio.objects.get(id=artisan_id)
-		(artisan_review, created) = Reviews.objects.get_or_create(artisan_id=artisan, customer_id=customer)
+		(artisan_review, created) = Reviews.objects.get_or_create(artisan=artisan, customer=customer)
 		data = {
 			"customer_id": customer.id,
 			**request.data
