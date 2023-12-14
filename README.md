@@ -10,8 +10,9 @@
 	-- HOST
 	-- USER
 	-- PASSWORD
+	-- MEDIA_ROOT
 ```
 - Run makemigrations
 - Run migrations
 
-HOST=localhost USER=airflow PASSWORD=airflow python3 manage.py runserver
+RUN EXAMPLE

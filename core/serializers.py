@@ -2,7 +2,7 @@ from django.db.models.aggregates import Avg
 from rest_framework import serializers
 from .models import (
 	Customer, ArtisanCategory, ArtisanPortfolio, Address,
-	Customer_profile_photo, Ratings
+	Customer_profile_photo, Ratings, Reviews, Artisan_profile_photo
 )
 
 class ArtisanRatingSerializer(serializers.ModelSerializer):
@@ -10,10 +10,20 @@ class ArtisanRatingSerializer(serializers.ModelSerializer):
 		model = Ratings
 		fields = ['id', 'rating']
 
+class ArtisanReviewSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Reviews
+		fields = ['id', 'review', 'updated_at']
+
 
 class Profile_photo_serializer(serializers.ModelSerializer):
 	class Meta:
 		model = Customer_profile_photo
+		fields = ['id', 'photo']
+	
+class Business_photo_serializer(serializers.ModelSerializer):
+	class Meta:
+		model = Artisan_profile_photo
 		fields = ['id', 'photo']
 	
 
@@ -46,18 +56,22 @@ class ArtisanAddressSerializer(serializers.ModelSerializer):
 
 class ArtisanPortfolioSerializer(serializers.ModelSerializer):
 	addresses = serializers.SerializerMethodField()
-	phone = serializers.SerializerMethodField()
 	ratings = serializers.SerializerMethodField()
+	reviews = ArtisanReviewSerializer(many=True, read_only=True)
+	photo = serializers.SerializerMethodField()
+
 
 	class Meta:
 		model = ArtisanPortfolio
-		fields = ['id', 'job_title', 'summary', 'category', 'phone', 'addresses', 'ratings']
+		fields = ['id', 'job_title', 'summary', 'category', 'business_line', 'addresses', 'ratings', 'reviews', 'photo']
 
-	def get_phone(self, obj):
+	def get_photo(self, obj):
 		try:
-			customer = obj.user.customer
-			return customer.phone if customer else None
-		except Customer.DoesNotExist:
+			artisan_user = Customer.objects.get(user_id=obj.user.id)
+			artisan_photo = Customer_profile_photo.objects.get(customer_id=artisan_user.id)
+			serialized = Profile_photo_serializer(artisan_photo)
+			return serialized.data['photo'] if artisan_photo else None
+		except Customer_profile_photo.DoesNotExist:
 			return None
 
 	def get_ratings(self, obj):

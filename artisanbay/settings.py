@@ -158,7 +158,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 MDEDIA_URL = '/media/'
-MEDIA_ROOT = environ.get('MEDIA_ROOT')
+MEDIA_ROOT = environ.get('MEDIA_ROOT') if environ.get('MEDIA_ROOT') else 'media'
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

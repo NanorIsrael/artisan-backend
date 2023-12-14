@@ -10,6 +10,7 @@ router.register('category', views.ArtisanCategoryViewSet)
 router.register('address', views.AddressViewSet)
 router.register('customer', views.ProfilePhotoViewSet)
 router.register('rating', views.ArtisanRatingViewset)
+router.register('review', views.ArtisanReviewViewset)
 
 
 urlpatterns =  router.urls

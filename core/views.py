@@ -11,13 +11,13 @@ from rest_framework.response import Response
 from rest_framework import viewsets
 from .models import (
 	Customer, ArtisanCategory, ArtisanPortfolio, 
-	Address, Customer_profile_photo, Ratings
+	Address, Customer_profile_photo, Ratings, Reviews
 )
 from .pagination import DefaultPagination
 from .serializers import (
 	CustomerSerializer, ArtisanCategorySerializer, ArtisanPortfolioSerializer, 
 	AddressSerializer, ArtisanUserIdSerializer, Profile_photo_serializer,
-	ArtisanRatingSerializer
+	ArtisanRatingSerializer, ArtisanReviewSerializer
 )
 
 class CustomerViewSet(
@@ -146,6 +146,11 @@ class ArtisanPortfolioViewSet(
 		serializer = self.serializer_class(paginated_queryset, many=True)
 		return self.get_paginated_response(serializer.data)
 
+	@action(detail=True, methods=['GET'])
+	def verify(self, request, pk=None):
+		artisan = ArtisanPortfolio.objects.get(pk=pk)
+		isVerified = artisan.user_id == request.user.id
+		return Response(isVerified)
 
 	@action(detail=True, methods=['GET'])
 	def info(self, request, pk=None):
@@ -191,6 +196,7 @@ class ProfilePhotoViewSet(viewsets.ModelViewSet):
 		except ( Customer.DoesNotExist, Customer_profile_photo.DoesNotExist):
 			return Response({'message': 'failed to upload image'})
 
+
 class ArtisanRatingViewset(viewsets.ModelViewSet):
 	queryset = Ratings.objects.all()
 	serializer_class = ArtisanRatingSerializer
@@ -225,7 +231,7 @@ class ArtisanRatingViewset(viewsets.ModelViewSet):
 		customer = Customer.objects.get(user_id=request.user.id)
 		artisan_id = request.data['artisan_id']
 
-		artisan_rating = Ratings.objects.get_or_create(artisan_id=artisan_id, customer_id=customer.id)
+		(artisan_rating, created) = Ratings.objects.get_or_create(artisan_id=artisan_id, customer_id=customer.id)
 		data = {
 			"customer_id": customer.id,
 			**request.data
@@ -234,5 +240,30 @@ class ArtisanRatingViewset(viewsets.ModelViewSet):
 		serialized = ArtisanRatingSerializer(artisan_rating, data)
 		serialized.is_valid(raise_exception=True)
 		serialized.save()
-		return Response('serialized.data')
+		return Response("OK")
+
+	
+class ArtisanReviewViewset(viewsets.ModelViewSet):
+	queryset = Reviews.objects.all()
+	serializer_class = ArtisanReviewSerializer
+		
+	@action(detail=False, methods=['GET'])
+	def artisan(self, request):
+		pass
+
+	@action(detail=False, methods=['POST'])
+	def add_review(self, request):
+		customer = Customer.objects.get(user_id=request.user.id)
+		artisan_id = request.data['artisan_id']
+		artisan = ArtisanPortfolio.objects.get(id=artisan_id)
+		(artisan_review, created) = Reviews.objects.get_or_create(artisan_id=artisan, customer_id=customer)
+		data = {
+			"customer_id": customer.id,
+			**request.data
+		}
+
+		serialized = ArtisanReviewSerializer(artisan_review, data)
+		serialized.is_valid(raise_exception=True)
+		serialized.save()
+		return Response('OK')
 		

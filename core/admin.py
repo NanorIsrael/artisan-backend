@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer
+from .models import Customer, ArtisanCategory
 
 
 # Register your models here.
@@ -11,4 +11,8 @@ class CustomerAdmin(admin.ModelAdmin):
 	list_per_page = 10
 	list_select_related = ['user']
 	search_fields = ['user__first_name__istartswith']
+
+@admin.register(ArtisanCategory)
+class ArtisanCategoryAdmin(admin.ModelAdmin):
+	list_display = ['category']
 
