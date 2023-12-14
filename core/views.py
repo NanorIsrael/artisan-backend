@@ -108,7 +108,7 @@ class ArtisanPortfolioViewSet(
 	search_fields = ['job_title', 'category', 'summary', 'user__address__city', 'user__address__state', 'user__address__street']
 
 	def get_queryset(self):
-		return ArtisanPortfolio.objects.all()
+		return [artisan for artisan in self.queryset if artisan.user.membership == 'A']
 
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
