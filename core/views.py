@@ -28,7 +28,7 @@ class CustomerViewSet(
 	serializer_class = CustomerSerializer
 	permission_classes = [IsAuthenticated]
 
-	@action(detail=False, methods=['GET', 'PUT'])
+	@action(detail=False, methods=['GET', 'PUT', 'PATCH'])
 	def me(self, request):
 
 		(customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
@@ -37,9 +37,11 @@ class CustomerViewSet(
 			customer.user.first_name = request.data['first_name']
 			customer.user.last_name = request.data['last_name']
 			customer.user.username = request.data['username']
-
-			customer.user.save()
-
+		if request.method == 'PATCH':
+			customer.user.membership = request.data['membership']
+		if request.method in ['PATCH', 'PUT']:
+			print(request.data)
+			customer.user.save() 
 			serialized = CustomerSerializer(customer, data=request.data)
 			serialized.is_valid(raise_exception=True)
 			serialized.save()
