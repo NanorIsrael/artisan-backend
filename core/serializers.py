@@ -12,14 +12,13 @@ class ArtisanRatingSerializer(serializers.ModelSerializer):
 
 class ArtisanReviewSerializer(serializers.ModelSerializer):
 	reviewer = serializers.SerializerMethodField()
-	
+
 	class Meta:
 		model = Reviews
 		fields = ['id', 'review', 'updated_at', 'reviewer']
 
 	def get_reviewer(self, obj):
 		customer = CustomerSerializer(obj.customer)
-		print(customer.data['first_name'])
 		if customer.data['first_name']:
 			reviewer = f"{customer.data['first_name']} {customer.data['last_name']}"
 		else:

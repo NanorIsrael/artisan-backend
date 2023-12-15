@@ -40,7 +40,6 @@ class CustomerViewSet(
 		if request.method == 'PATCH':
 			customer.user.membership = request.data['membership']
 		if request.method in ['PATCH', 'PUT']:
-			print(request.data)
 			customer.user.save() 
 			serialized = CustomerSerializer(customer, data=request.data)
 			serialized.is_valid(raise_exception=True)
@@ -108,7 +107,7 @@ class ArtisanPortfolioViewSet(
 	search_fields = ['job_title', 'category', 'summary', 'user__address__city', 'user__address__state', 'user__address__street']
 
 	def get_queryset(self):
-		return [artisan for artisan in self.queryset if artisan.user.membership == 'A']
+		return self.queryset.filter(user__membership='A')
 
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
