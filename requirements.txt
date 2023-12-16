@@ -3,4 +3,5 @@ psycopg2-binary
 djangorestframework
 djoser
 django-cors-headers
+django-environ
 pillow

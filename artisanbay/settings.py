@@ -12,20 +12,23 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 
 from pathlib import Path
-from os import environ, path
+import environ
+from os import path
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+env = environ.Env(DEBUG=(bool, False))
+environ.Env.read_env(env_file=".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-v&u=p=57^_0&rb71pk0el1_vlu%7w)ay!+tb@ro3ma@2sf(t^)'
+SECRET_KEY = env('SECRET_KEY')
+# 'django-insecure-v&u=p=57^_0&rb71pk0el1_vlu%7w)ay!+tb@ro3ma@2sf(t^)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
 # Application definition
 
@@ -57,9 +60,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'artisanbay.urls'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
+CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(" ")
 
 # Allow cookies to be included in cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
@@ -110,14 +111,13 @@ WSGI_APPLICATION = 'artisanbay.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'artisanbay',
-        'HOST': environ.get('HOST'),
-        'USER': environ.get('USER'),
-        'PASSWORD': environ.get('PASSWORD')
+        'HOST': env('HOST'),
+        'USER': env('DBUSER'),
+        'PASSWORD': env('PASSWORD')
     }
 }
 
@@ -158,7 +158,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 MDEDIA_URL = '/media/'
-MEDIA_ROOT = environ.get('MEDIA_ROOT') if environ.get('MEDIA_ROOT') else 'media'
+MEDIA_ROOT = env('MEDIA_ROOT')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
