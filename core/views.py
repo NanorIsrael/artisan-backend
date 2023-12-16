@@ -71,16 +71,27 @@ class AddressViewSet(
 
 	@action(detail=False, methods=['GET'])
 	def streets(self, request):
+			unique_streets = []
 			streets = Address.objects.all()
 			serialized = AddressSerializer(streets, many=True)
-			street_data = [item['street'] for item in serialized.data]
+
+			for item in serialized.data:
+				street = item['street']
+				unique_streets.add(street.lower())
+
+			street_data = list(unique_streets)
 			return Response(street_data)
 
 	@action(detail=False, methods=['GET'])
 	def cities(self, request):
+			cities = set()
 			cities = Address.objects.all()
 			serialized = AddressSerializer(cities, many=True)
-			city_data = [item['city'] for item in serialized.data]
+
+			for item in serialized.data:
+				city = item['city']
+				cities.add(city.lower())
+			city_data = list(cities)
 			return Response(city_data)
 
 	@action(detail=False, methods=['GET'])

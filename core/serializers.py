@@ -40,15 +40,18 @@ class Business_photo_serializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
 	photos = Profile_photo_serializer(many=True, read_only=True)
+	isArtisan = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Customer
 		fields = [
 			'id', 'phone', 'first_name', 'last_name',
 			'birth_date', 'membership', 'email',
-			'username', 'photos',
+			'username', 'photos', 'isArtisan'
 		]
 
+	def get_isArtisan(self, obj):
+		return ArtisanPortfolio.objects.filter(user=obj.user).exists()
 
 class AddressSerializer(serializers.ModelSerializer):
 	class Meta:
