@@ -15,4 +15,11 @@
 - Run makemigrations
 - Run migrations
 
-RUN EXAMPLE
+RUN
+python manage.py runserver
+
+
+
+UI
+
+www.dev-israel.tech

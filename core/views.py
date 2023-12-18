@@ -118,16 +118,22 @@ class ArtisanPortfolioViewSet(
 	search_fields = ['job_title', 'category', 'summary', 'user__address__city', 'user__address__state', 'user__address__street']
 
 	def get_queryset(self):
-		return self.queryset.filter(user__membership='A')
+		return self.queryset.filter(user__membership='A').exclude(job_title='')
+
 
 	@action(detail=False, methods=['GET', 'PUT', 'POST'])
 	def profile(self, request):
 		permission_classes = [IsAuthenticated]
-		(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=request.user.id)
 		if request.method == 'GET': 
+			try:
+				artisan = ArtisanPortfolio.objects.get(user__id=request.user.id)
+			except ArtisanPortfolio.DoesNotExist:
+				artisan = None
+
 			serialized = ArtisanPortfolioSerializer(artisan)
 			return Response(serialized.data)
 		else:
+			(artisan, created) = ArtisanPortfolio.objects.get_or_create(user_id=request.user.id)
 			serialized = ArtisanPortfolioSerializer(artisan, data=request.data)
 			serialized.is_valid(raise_exception=True)
 			serialized.save()
@@ -182,6 +188,7 @@ class ArtisanPortfolioViewSet(
 			)
 		except (ArtisanPortfolio.DoesNotExist, Customer.DoesNotExist):
 			return Response({'error': 'Artisan not found'}, status='404')
+
 
 
 class ProfilePhotoViewSet(viewsets.ModelViewSet):

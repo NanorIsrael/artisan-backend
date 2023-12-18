@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator
 
 
 # Create your models here.
@@ -104,10 +104,10 @@ class ArtisanPortfolio(models.Model):
 		(OTHERS, 'OTHERS'),
 	]
 
-	job_title = models.CharField(max_length=255)
+	job_title = models.CharField(max_length=255, null=False, validators=[MinLengthValidator(limit_value=1)])
 	summary = models.TextField()
 	category = models.CharField(max_length=255, choices=MEMBERSHIP_CHOICES, default=OTHERS)
-	business_line = models.CharField(max_length=255)
+	business_line = models.CharField(max_length=255, null=False)
 
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 	class Meta:

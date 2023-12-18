@@ -24,7 +24,7 @@ urlpatterns = [
     path('business/', include('core.urls')),
     path('auth/', include('djoser.urls')),
     path('user/', include('djoser.urls.jwt')),
-    # path('user/', include('common.urls')),
 ]
+
 if settings.DEBUG:
     urlpatterns += static('/', document_root=settings.MEDIA_ROOT)
