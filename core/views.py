@@ -71,7 +71,7 @@ class AddressViewSet(
 
 	@action(detail=False, methods=['GET'])
 	def streets(self, request):
-			unique_streets = []
+			unique_streets = set()
 			streets = Address.objects.all()
 			serialized = AddressSerializer(streets, many=True)
 
@@ -84,14 +84,14 @@ class AddressViewSet(
 
 	@action(detail=False, methods=['GET'])
 	def cities(self, request):
-			cities = set()
+			unique_cities = set()
 			cities = Address.objects.all()
 			serialized = AddressSerializer(cities, many=True)
 
 			for item in serialized.data:
 				city = item['city']
-				cities.add(city.lower())
-			city_data = list(cities)
+				unique_cities.add(city.lower())
+			city_data = list(unique_cities)
 			return Response(city_data)
 
 	@action(detail=False, methods=['GET'])
